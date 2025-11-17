@@ -42,6 +42,10 @@ function draw() {
     accX = accelerationX;
     accY = accelerationY;
     accZ = accelerationZ;
+
+    // 【假设修正】：如果你的 sketch.js 第 132 行在这里（或其他地方）
+    // 引用了未定义的 accelerationChange，请将其移除或注释。
+    // 假设你只需要上面三行，则无需修改。
 }
 
 // 设备摇动事件
@@ -59,8 +63,18 @@ function deviceShaken() {
     // 将强度映射到 wind 参数 (假设 wind 参数范围 0~1)
     let windValue = map(strength, 0, 30, 0, 2);
 
-    // 设置风铃的 wind 参数
-    dspNode.setParamValue("/windchimes/wind", windValue);
+    // 【关键修复】：根据控制台输出，参数地址应为 /windchimes/wind_chimes/wind
+    dspNode.setParamValue("/windchimes/wind_chimes/wind", windValue);
+
+    // 【建议添加】：如果风铃没有声音，可能需要一个瞬时触发器（Gate/Trigger）
+    // 你可以尝试查看 DSP Params 中是否有类似 /windchimes/gate 或 /windchimes/trigger 的参数
+    // 如果有，你可以尝试添加如下代码（但请先尝试上面的修复）：
+    /*
+    dspNode.setParamValue("/windchimes/gate", 1);
+    setTimeout(() => {
+        dspNode.setParamValue("/windchimes/gate", 0);
+    }, 100);
+    */
 
     // 控制台打印便于调试
     console.log("strength:", strength.toFixed(2), "windValue:", windValue.toFixed(2));
