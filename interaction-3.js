@@ -53,13 +53,17 @@ function accelerationChange(accx, accy, accz) {
 }
 
 function rotationChange(rotx, roty, rotz) {
-    // 🚨 改变颜色以示触发
+    // 🚨 关键修改：使用 roty (rotationY)
     statusLabels[1].style("color", "pink");
 
-    // 假设你的 p5.js draw() 中有逻辑将颜色改回默认，否则颜色会保持粉色。
-
     // 使用 rotationY (roty) 来控制风力。
-    let rotationValue = abs(roty);
+    // rotationY 在设备平放时，通常反映绕重力轴的旋转（即在桌面上转动）。
+    // 范围通常是 -90 到 90（当设备立起来时）或 0 到 360（当设备平放时，依赖于设备和浏览器）。
+    let rotationValue;
+
+    // 假设 roty 的范围是 0 到 360 度，或者我们取其绝对值，映射一个较大的变化。
+    // 如果你在平放旋转时 roty 有较大的 0-360 变化，则使用它。
+    rotationValue = abs(roty);
 
     // ⚠️ 假设 /force 的 Min/Max 范围是 0.01 到 1.0 
     const minForce = 0.01;
@@ -72,10 +76,7 @@ function rotationChange(rotx, roty, rotz) {
 }
 
 function mousePressed() {
-    // 🚨 恢复：用于激活 AudioContext，并给一个基础 Force 值
-    // 避免在没有旋转时 force 变为 0 导致静音
-    playAudio(0.01);
-    // Use this for debugging from the desktop!
+    // 禁用此交互
 }
 
 function deviceMoved() {
@@ -96,6 +97,7 @@ function deviceShaken() {
 function getMinMaxParam(address) {
     const exampleMinMaxParam = findByAddress(dspNodeParams, address);
     const [exampleMinValue, exampleMaxValue] = getParamMinMax(exampleMinMaxParam);
+    // 禁用控制台输出
     return [exampleMinValue, exampleMaxValue]
 }
 
@@ -114,7 +116,7 @@ function playAudio(force) {
         return;
     }
     if (audioContext.state === 'suspended') {
-        audioContext.resume(); // 确保 AudioContext 激活
+        audioContext.resume();
     }
 
     // 设置 force 参数
