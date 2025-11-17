@@ -13,6 +13,7 @@ let jsonParams = null;
 let isEngineRunning = false;
 let maxSpeedValue = 0.1;
 const MAX_SPEED_LIMIT = 0.5;
+let isInSkyPosition = false;
 
 // Change here to ("tuono") depending on your wasm file name
 const dspName = "engine";
@@ -59,32 +60,41 @@ function accelerationChange(accx, accy, accz) {
 }
 
 function rotationChange(rotx, roty, rotz) {
-    const angleThreshold = 5; // 设置一个容错范围，例如 85度 到 95度 之间都算“指向天空”
+    const angleThreshold = 5;
+    const isPointingToSky = Math.abs(rotx - 90) <= angleThreshold;
 
-    // 检查 rotx 是否接近 90 度 (指向天空)
-    if (Math.abs(rotx - 90) <= angleThreshold) {
+    // --- 步骤 1: 检查是否首次进入天空区域 ---
+    if (isPointingToSky && !isInSkyPosition) {
+        // 触发一次 "指向天空" 事件
+        isInSkyPosition = true; // 标记：我们现在在天空区域内
 
         if (!isEngineRunning) {
             // 第一次指向天空：启动引擎
             isEngineRunning = true;
-            dspNode.setParamValue("/engine/gate", 1);
-            console.log("Engine Started! Initial Max Speed: " + maxSpeedValue);
+            if (dspNode) {
+                dspNode.setParamValue("/engine/gate", 1);
+                dspNode.setParamValue("/engine/maxSpeed", maxSpeedValue);
+                console.log("Engine Started! Initial Max Speed: " + maxSpeedValue);
+            }
         } else {
             // 后续指向天空：增加 maxSpeedValue
             if (maxSpeedValue < MAX_SPEED_LIMIT) {
-                maxSpeedValue += 0.05; // 每次增加 0.05
-                // 确保不超过最大值
-                maxSpeedValue = Math.min(maxSpeedValue, MAX_SPEED_LIMIT);
-
-                // 将新的 maxSpeedValue 应用到 DSP
-                dspNode.setParamValue("/engine/maxSpeed", maxSpeedValue);
-                console.log("Max Speed Increased to: " + maxSpeedValue);
+                maxSpeedValue = Math.min(maxSpeedValue + 0.05, MAX_SPEED_LIMIT);
+                if (dspNode) {
+                    dspNode.setParamValue("/engine/maxSpeed", maxSpeedValue);
+                    console.log("Max Speed Increased to: " + maxSpeedValue);
+                }
             } else {
                 console.log("Max Speed is already at the limit: " + MAX_SPEED_LIMIT);
             }
         }
     }
-
+    // --- 步骤 2: 检查是否离开天空区域（复位逻辑） ---
+    else if (!isPointingToSky && isInSkyPosition) {
+        // 手机离开了天空区域
+        isInSkyPosition = false; // 允许下次再次进入时触发事件
+        console.log("Left Sky Position. Ready for next boost.");
+    }
 }
 
 function mousePressed() {
