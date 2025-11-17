@@ -34,52 +34,47 @@ windchimes.createDSP(audioContext, 1024)
 // INTERACTIONS
 //==========================================================================================
 
-// 用于控制文字变色
-let shaketimer = 0;
+// 全局存储加速度
+let accX = 0, accY = 0, accZ = 0;
 
-// 解锁 AudioContext (首次点击页面)
-function mousePressed() {
-    if (audioContext.state === 'suspended') {
-        audioContext.resume();
-        console.log("AudioContext resumed");
-    }
+function draw() {
+    // p5.js 自动更新加速度
+    accX = accelerationX;
+    accY = accelerationY;
+    accZ = accelerationZ;
 }
 
-// p5.js 会每帧调用
-function accelerationChange(accx, accy, accz) {
+// 设备摇动事件
+function deviceShaken() {
     shaketimer = millis();
-
-    // 文字变粉色提示触发
-    if (statusLabels && statusLabels[0]) {
-        statusLabels[0].style("color", "pink");
-    }
+    // 变色提示
+    statusLabels[0].style("color", "pink");
 
     if (!dspNode) return;
 
     // 计算摇动强度
-    let strength = Math.sqrt(accx * accx + accy * accy + accz * accz);
+    let strength = Math.sqrt(accX * accX + accY * accY + accZ * accZ);
+    strength = constrain(strength, 0, 30); // 限制最大值
 
-    // 限制最大值，防止过大
-    strength = constrain(strength, 0, 30);
-
-    // 将摇动强度映射到 wind 参数范围 (0~1)
-    let windValue = map(strength, 0, 30, 0, 1);
+    // 将强度映射到 wind 参数 (假设 wind 参数范围 0~1)
+    let windValue = map(strength, 0, 30, 0, 2);
 
     // 设置风铃的 wind 参数
     dspNode.setParamValue("/windchimes/wind", windValue);
 
+    // 控制台打印便于调试
     console.log("strength:", strength.toFixed(2), "windValue:", windValue.toFixed(2));
 }
 
-// 可选：保持原 deviceMoved / deviceTurned 接口
+// 设备移动事件（可选）
 function deviceMoved() {
-    if (statusLabels && statusLabels[2]) {
-        statusLabels[2].style("color", "pink");
-    }
+    movetimer = millis();
+    statusLabels[2].style("color", "pink");
 }
 
+// 设备旋转事件（可选）
 function deviceTurned() {
-    // 可根据需要使用
+    threshVals[1] = turnAxis;
 }
 
 //==========================================================================================
@@ -87,7 +82,6 @@ function deviceTurned() {
 //==========================================================================================
 
 function getMinMaxParam(address) {
-    if (!dspNodeParams) return [0, 1];
     const exampleMinMaxParam = findByAddress(dspNodeParams, address);
     const [exampleMinValue, exampleMaxValue] = getParamMinMax(exampleMinMaxParam);
     console.log('Min value:', exampleMinValue, 'Max value:', exampleMaxValue);
