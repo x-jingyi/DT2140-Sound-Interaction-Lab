@@ -34,7 +34,6 @@ wind.createDSP(audioContext, 1024)
         jsonParams = JSON.parse(jsonString)["ui"][0]["items"];
         dspNodeParams = jsonParams
         // getMinMaxParam("/wind/wind/force"); // 禁用控制台输出
-        // console.log('✅ DSP Node created and ready.'); // 禁用控制台输出
     });
 
 
@@ -99,7 +98,6 @@ function getMinMaxParam(address) {
     const exampleMinMaxParam = findByAddress(dspNodeParams, address);
     const [exampleMinValue, exampleMaxValue] = getParamMinMax(exampleMinMaxParam);
     // 禁用控制台输出
-    // console.log(`Min value for ${address}:`, exampleMinValue, `Max value for ${address}:`, exampleMaxValue);
     return [exampleMinValue, exampleMaxValue]
 }
 
