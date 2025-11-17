@@ -32,6 +32,7 @@ wind.createDSP(audioContext, 1024)
     .then(node => {
         dspNode = node;
         dspNode.connect(audioContext.destination);
+        dspNode.setParamValue("/wind/wind/force", 0);
         console.log('params: ', dspNode.getParams());
         const jsonString = dspNode.getJSON();
         jsonParams = JSON.parse(jsonString)["ui"][0]["items"];
@@ -105,7 +106,7 @@ function deviceTurned() {
         // 4. 将速度映射到音频参数 (Force)
         // 我们需要一个函数将 'rotationSpeed' (例如 0 到 720 度/秒) 映射到 'force' (例如 0 到 MAX_FORCE)
         // 假设最大速度是 720 度/秒，可以根据实际测试调整 
-        const maxExpectedSpeed = 720;
+        const maxExpectedSpeed = 270;
         let force = map(rotationSpeed, 0, maxExpectedSpeed, 0, MAX_FORCE);
         force = constrain(force, 0, MAX_FORCE); // 确保值在 0 到 MAX_FORCE 之间
 
@@ -117,6 +118,7 @@ function deviceTurned() {
             // 如果旋转停止，可以将 force 设为 0 来停止或衰减声音
             playAudio(0);
         }
+        console.log(`Speed: ${rotationSpeed.toFixed(2)} deg/s, Force: ${force.toFixed(2)}`);
 
     }
 
