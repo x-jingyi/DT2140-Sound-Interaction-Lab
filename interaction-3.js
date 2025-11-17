@@ -54,17 +54,23 @@ function accelerationChange(accx, accy, accz) {
 }
 
 function rotationChange(rotx, roty, rotz) {
-    // 🚨 根据你的要求，使用 statusLabels[1]（即第二个标签，如果它是 "turned"）
+    // 🚨 关键修改：使用 roty (rotationY)
     statusLabels[1].style("color", "pink");
 
-    // 使用 rotationZ (rotz)
-    let rotationValue = abs(rotz); // 获取 Z 轴旋转的绝对值，范围大约 0-360 度
+    // 使用 rotationY (roty) 来控制风力。
+    // rotationY 在设备平放时，通常反映绕重力轴的旋转（即在桌面上转动）。
+    // 范围通常是 -90 到 90（当设备立起来时）或 0 到 360（当设备平放时，依赖于设备和浏览器）。
+    let rotationValue;
+
+    // 假设 roty 的范围是 0 到 360 度，或者我们取其绝对值，映射一个较大的变化。
+    // 如果你在平放旋转时 roty 有较大的 0-360 变化，则使用它。
+    rotationValue = abs(roty);
 
     // ⚠️ 假设 /force 的 Min/Max 范围是 0.01 到 1.0 
     const minForce = 0.01;
     const maxForce = 1.0;
 
-    // 将 0-360 度映射到 minForce-maxForce
+    // 假设 rotationY 的变化范围最大为 360 度
     const forceValue = map(rotationValue, 0, 360, minForce, maxForce, true);
 
     playAudio(forceValue);
