@@ -1,15 +1,21 @@
 //==========================================================================================
-// COMPLETE FIXED SCRIPT (map -> mapRange, Math.abs, millis compatibility)
+// AUDIO SETUP
+//------------------------------------------------------------------------------------------
+//
+//------------------------------------------------------------------------------------------
+// Edit just where you're asked to!
+//------------------------------------------------------------------------------------------
+//
 //==========================================================================================
 let dspNode = null;
 let dspNodeParams = null;
 let jsonParams = null;
 
-// If your environment already has an audioContext variable, keep using it.
-// Otherwise ensure audioContext is created elsewhere before this script runs.
+// Change here to ("wind") for your wind.wasm file
 const dspName = "wind";
 const instance = new FaustWasm2ScriptProcessor(dspName);
 
+// output to window or npm package module
 if (typeof module === "undefined") {
     window[dspName] = instance;
 } else {
@@ -18,148 +24,105 @@ if (typeof module === "undefined") {
     module.exports = exp;
 }
 
-// create DSP (assumes `wind` is available in scope)
-if (typeof wind !== "undefined" && typeof audioContext !== "undefined") {
-    wind.createDSP(audioContext, 1024)
-        .then(node => {
-            dspNode = node;
-            dspNode.connect(audioContext.destination);
-            const jsonString = dspNode.getJSON();
-            try {
-                jsonParams = JSON.parse(jsonString)["ui"][0]["items"];
-                dspNodeParams = jsonParams;
-            } catch (e) {
-                // JSON parse failed — keep params null
-                dspNodeParams = null;
-            }
-        })
-        .catch(err => {
-            console.warn("Could not create DSP node:", err);
-        });
-} else {
-    console.warn("wind or audioContext is not defined in this environment.");
+// The name should be the same as the WASM file, so change brass with wind
+wind.createDSP(audioContext, 1024)
+    .then(node => {
+        dspNode = node;
+        dspNode.connect(audioContext.destination);
+        // console.log('params: ', dspNode.getParams()); // 禁用控制台输出
+        const jsonString = dspNode.getJSON();
+        jsonParams = JSON.parse(jsonString)["ui"][0]["items"];
+        dspNodeParams = jsonParams
+        // getMinMaxParam("/wind/wind/force"); // 禁用控制台输出
+    });
+
+
+//==========================================================================================
+// INTERACTIONS
+//------------------------------------------------------------------------------------------
+//
+//------------------------------------------------------------------------------------------
+// Edit the next functions to create interactions
+// Decide which parameters you're using and then use playAudio to play the Audio
+//------------------------------------------------------------------------------------------
+//
+//==========================================================================================
+
+function accelerationChange(accx, accy, accz) {
+    // 禁用此交互
 }
 
-//==========================================================================================
-// DEVICE ORIENTATION LISTENER
-//==========================================================================================
-if (window && window.DeviceOrientationEvent) {
-    window.addEventListener("deviceorientation", (event) => {
-        const rotx = (typeof event.alpha === "number") ? event.alpha : 0; // z axis
-        const roty = (typeof event.beta === "number") ? event.beta : 0;   // x axis
-        const rotz = (typeof event.gamma === "number") ? event.gamma : 0; // y axis
-        rotationChange(rotx, roty, rotz);
-    }, true);
-}
-
-//==========================================================================================
-// UTILITY (rename map -> mapRange to avoid p5 conflict)
-//==========================================================================================
-
-/**
- * mapRange(value, in_min, in_max, out_min, out_max, clamp=false)
- * Like p5.map but renamed to avoid conflicts with p5.js global `map`.
- */
-function mapRange(value, in_min, in_max, out_min, out_max, clamp = false) {
-    // Protect against division by zero
-    if (in_max === in_min) return out_min;
-    let v = (value - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
-    if (clamp) {
-        if (out_min < out_max) {
-            v = Math.max(out_min, Math.min(out_max, v));
-        } else {
-            v = Math.max(out_max, Math.min(out_min, v));
-        }
-    }
-    return v;
-}
-
-// millis compatibility: if p5 provides millis(), use it; otherwise use Date.now()
-function safeMillis() {
-    if (typeof millis === "function") return millis();
-    return Date.now();
-}
-
-//==========================================================================================
-// INTERACTION: ROTATION LOGIC
-//==========================================================================================
 function rotationChange(rotx, roty, rotz) {
-    // statusLabels is expected to be defined in your environment (p5 or DOM)
-    if (typeof statusLabels === "undefined" || !statusLabels || !statusLabels[1]) {
-        // If no statusLabels, still map audio so wind effect can be heard
-        handleRotationAudio(roty);
-        return;
-    }
+    // 🚨 关键修改：使用 roty (rotationY)
+    statusLabels[1].style("color", "pink");
 
-    // Use Math.abs instead of abs to avoid p5 global usage
-    const absRot = Math.abs(roty);
+    // 使用 rotationY (roty) 来控制风力。
+    // rotationY 在设备平放时，通常反映绕重力轴的旋转（即在桌面上转动）。
+    // 范围通常是 -90 到 90（当设备立起来时）或 0 到 360（当设备平放时，依赖于设备和浏览器）。
+    let rotationValue;
 
-    // --- 1) Change label color dynamically (pink-ish) ---
-    // Choose a small H range inside pink tones: tweak as you like
-    // We'll map rotation 0..360 -> hue 330..350 (pink)
-    const hue = mapRange(absRot, 0, 360, 330, 350, true);
-    // If statusLabels elements are D3-like or p5 DOM, keep .style; otherwise try direct DOM
-    try {
-        statusLabels[1].style("color", `hsl(${hue},100%,70%)`);
-    } catch (e) {
-        // fallback if statusLabels is a DOM element collection:
-        try {
-            if (statusLabels[1].style) {
-                statusLabels[1].style.color = `hsl(${hue},100%,70%)`;
-            }
-        } catch (ee) {
-            // ignore styling errors
-        }
-    }
+    // 假设 roty 的范围是 0 到 360 度，或者我们取其绝对值，映射一个较大的变化。
+    // 如果你在平放旋转时 roty 有较大的 0-360 变化，则使用它。
+    rotationValue = abs(roty);
 
-    // --- 2) Map rotation to wind force ---
+    // ⚠️ 假设 /force 的 Min/Max 范围是 0.01 到 1.0 
     const minForce = 0.01;
     const maxForce = 1.0;
-    const forceValue = mapRange(absRot, 0, 360, minForce, maxForce, true);
 
-    // --- 3) Play audio with mapped force ---
+    // 假设 rotationY 的变化范围最大为 360 度
+    const forceValue = map(rotationValue, 0, 360, minForce, maxForce, true);
+
     playAudio(forceValue);
 }
 
-function handleRotationAudio(roty) {
-    const absRot = Math.abs(roty || 0);
-    const minForce = 0.01;
-    const maxForce = 1.0;
-    const forceValue = mapRange(absRot, 0, 360, minForce, maxForce, true);
-    playAudio(forceValue);
+function mousePressed() {
+    // 禁用此交互
+}
+
+function deviceMoved() {
+    movetimer = millis();
+    statusLabels[2].style("color", "pink");
+    // 禁用音频触发
+}
+
+function deviceTurned() {
+    // 禁用此交互
+}
+function deviceShaken() {
+    shaketimer = millis();
+    statusLabels[0].style("color", "pink");
+    // 禁用音频触发
+}
+
+function getMinMaxParam(address) {
+    const exampleMinMaxParam = findByAddress(dspNodeParams, address);
+    const [exampleMinValue, exampleMaxValue] = getParamMinMax(exampleMinMaxParam);
+    // 禁用控制台输出
+    return [exampleMinValue, exampleMaxValue]
 }
 
 //==========================================================================================
-// AUDIO CONTROL
+// AUDIO INTERACTION
+//------------------------------------------------------------------------------------------
+//
+//------------------------------------------------------------------------------------------
+// Edit here to define your audio controls 
+//------------------------------------------------------------------------------------------
+//
 //==========================================================================================
+
 function playAudio(force) {
     if (!dspNode) {
-        // DSP not ready yet
         return;
     }
-
-    // Modern browsers require a user interaction to unlock audio.
-    // We try to resume the audioContext if it's suspended.
-    try {
-        if (typeof audioContext !== "undefined" && audioContext.state === "suspended") {
-            audioContext.resume().catch(() => {
-                // resume may fail if no user gesture — that's expected behavior
-            });
-        }
-    } catch (e) {
-        // ignore audioContext resume errors
+    if (audioContext.state === 'suspended') {
+        audioContext.resume();
     }
 
-    // Finally set the parameter if dspNode supports it
-    try {
-        if (typeof dspNode.setParamValue === "function") {
-            dspNode.setParamValue("/wind/wind/force", force);
-        } else {
-            // fallback: try to find param setter form
-            if (dspNode.params && dspNode.params["/wind/wind/force"]) {
-                // some DSP wrappers expose params object
-                dspNode.params["/wind/wind/force"].value = force;
-            }
-        }
-    } catch (e) {
-        console.warn("Failed to set DSP parameter
+    // 设置 force 参数
+    dspNode.setParamValue("/wind/wind/force", force);
+}
+
+//==========================================================================================
+// END
+//==========================================================================================
