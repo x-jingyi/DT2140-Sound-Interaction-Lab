@@ -72,60 +72,59 @@ function deviceMoved() {
 }
 
 function deviceTurned() {
-    function deviceTurned() {
-        // 假设您使用的框架（如 p5.js）提供了 currentRotationZ
-        const currentRotationZ = rotationZ; // 假设 rotationZ 存储了当前的 Z 轴旋转角度（0-360度）
-        const currentTime = millis(); // 假设 millis() 返回当前时间（毫秒）
+    // 假设您使用的框架（如 p5.js）提供了 currentRotationZ
+    const currentRotationZ = rotationZ; // 假设 rotationZ 存储了当前的 Z 轴旋转角度（0-360度）
+    const currentTime = millis(); // 假设 millis() 返回当前时间（毫秒）
 
-        // 检查是否有上次的数据
-        if (lastTime > 0) {
-            // 1. 计算角度变化量 (delta)
-            let angleDelta = currentRotationZ - lastRotationZ;
+    // 检查是否有上次的数据
+    if (lastTime > 0) {
+        // 1. 计算角度变化量 (delta)
+        let angleDelta = currentRotationZ - lastRotationZ;
 
-            // 处理角度回环（例如从 350度转到 10度，实际变化是 20度，而不是 -340度）
-            if (angleDelta > 180) {
-                angleDelta -= 360;
-            } else if (angleDelta < -180) {
-                angleDelta += 360;
-            }
-
-            // 取绝对值，我们只关心旋转的快慢，不关心方向
-            const absAngleDelta = Math.abs(angleDelta);
-
-            // 2. 计算时间变化量 (deltaTime)
-            const deltaTime = currentTime - lastTime; // 毫秒
-
-            // 3. 计算旋转速度 (Speed = Delta Angle / Delta Time)
-            // 使用一个较小的deltaTime阈值来避免除以零或数值不稳定
-            let rotationSpeed = 0;
-            if (deltaTime > 10) {
-                // 速度 = 角度变化 (度) / 时间变化 (秒) -> 度/秒
-                rotationSpeed = absAngleDelta / (deltaTime / 1000);
-            }
-
-            // 4. 将速度映射到音频参数 (Force)
-            // 我们需要一个函数将 'rotationSpeed' (例如 0 到 720 度/秒) 映射到 'force' (例如 0 到 MAX_FORCE)
-            // 假设最大速度是 720 度/秒，可以根据实际测试调整 
-            const maxExpectedSpeed = 720;
-            let force = map(rotationSpeed, 0, maxExpectedSpeed, 0, MAX_FORCE);
-            force = constrain(force, 0, MAX_FORCE); // 确保值在 0 到 MAX_FORCE 之间
-
-            // 5. 触发音频播放和视觉反馈
-            if (rotationSpeed > 5) { // 设置一个最小旋转速度阈值，避免微小抖动触发
-                statusLabels[1].style("color", "pink"); // 视觉反馈
-                playAudio(force); // 播放音频，并将 force 值传入
-            } else {
-                // 如果旋转停止，可以将 force 设为 0 来停止或衰减声音
-                playAudio(0);
-            }
-
+        // 处理角度回环（例如从 350度转到 10度，实际变化是 20度，而不是 -340度）
+        if (angleDelta > 180) {
+            angleDelta -= 360;
+        } else if (angleDelta < -180) {
+            angleDelta += 360;
         }
 
-        // 6. 更新历史数据
-        lastRotationZ = currentRotationZ;
-        lastTime = currentTime;
-        threshVals[1] = turnAxis; // 保留原有逻辑
+        // 取绝对值，我们只关心旋转的快慢，不关心方向
+        const absAngleDelta = Math.abs(angleDelta);
+
+        // 2. 计算时间变化量 (deltaTime)
+        const deltaTime = currentTime - lastTime; // 毫秒
+
+        // 3. 计算旋转速度 (Speed = Delta Angle / Delta Time)
+        // 使用一个较小的deltaTime阈值来避免除以零或数值不稳定
+        let rotationSpeed = 0;
+        if (deltaTime > 10) {
+            // 速度 = 角度变化 (度) / 时间变化 (秒) -> 度/秒
+            rotationSpeed = absAngleDelta / (deltaTime / 1000);
+        }
+
+        // 4. 将速度映射到音频参数 (Force)
+        // 我们需要一个函数将 'rotationSpeed' (例如 0 到 720 度/秒) 映射到 'force' (例如 0 到 MAX_FORCE)
+        // 假设最大速度是 720 度/秒，可以根据实际测试调整 
+        const maxExpectedSpeed = 720;
+        let force = map(rotationSpeed, 0, maxExpectedSpeed, 0, MAX_FORCE);
+        force = constrain(force, 0, MAX_FORCE); // 确保值在 0 到 MAX_FORCE 之间
+
+        // 5. 触发音频播放和视觉反馈
+        if (rotationSpeed > 5) { // 设置一个最小旋转速度阈值，避免微小抖动触发
+            statusLabels[1].style("color", "pink"); // 视觉反馈
+            playAudio(force); // 播放音频，并将 force 值传入
+        } else {
+            // 如果旋转停止，可以将 force 设为 0 来停止或衰减声音
+            playAudio(0);
+        }
+
     }
+
+    // 6. 更新历史数据
+    lastRotationZ = currentRotationZ;
+    lastTime = currentTime;
+    threshVals[1] = turnAxis; // 保留原有逻辑
+
 }
 function deviceShaken() {
     //shaketimer = millis();
