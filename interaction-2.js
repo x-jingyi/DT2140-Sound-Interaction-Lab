@@ -63,13 +63,13 @@ function rotationChange(rotx, roty, rotz) {
     const angleThreshold = 5;
     const isPointingToSky = Math.abs(rotx - 90) <= angleThreshold;
 
-    // --- 步骤 1: 检查是否首次进入天空区域 ---
+    // check if it's the first time to point straight up
     if (isPointingToSky && !isInSkyPosition) {
-        // 触发一次 "指向天空" 事件
-        isInSkyPosition = true; // 标记：我们现在在天空区域内
+
+        isInSkyPosition = true;
 
         if (!isEngineRunning) {
-            // 第一次指向天空：启动引擎
+            // start the engine at the first time 
             isEngineRunning = true;
             if (dspNode) {
                 dspNode.setParamValue("/engine/gate", 1);
@@ -77,7 +77,7 @@ function rotationChange(rotx, roty, rotz) {
                 console.log("Engine Started! Initial Max Speed: " + maxSpeedValue);
             }
         } else {
-            // 后续指向天空：增加 maxSpeedValue
+            // add maxSpeedValue for the next time
             if (maxSpeedValue < MAX_SPEED_LIMIT) {
                 maxSpeedValue = Math.min(maxSpeedValue + 0.05, MAX_SPEED_LIMIT);
                 if (dspNode) {
@@ -89,19 +89,78 @@ function rotationChange(rotx, roty, rotz) {
             }
         }
     }
-    // --- 步骤 2: 检查是否离开天空区域（复位逻辑） ---
+    // check whether leave the 85°-90°
     else if (!isPointingToSky && isInSkyPosition) {
-        // 手机离开了天空区域
-        isInSkyPosition = false; // 允许下次再次进入时触发事件
+        // if leave
+        isInSkyPosition = false; // set to false for the next time enter
         console.log("Left Sky Position. Ready for next boost.");
     }
 }
 
-function mousePressed() {
-    // playAudio()
-    // Use this for debugging from the desktop!
-}
+/*let mouseClickToggle = true; // true = 模拟指向天空 (进入)
 
+function mousePressed() {
+    // 确保点击时恢复音频上下文 (在许多浏览器中是必要的)
+    if (typeof audioContext !== 'undefined' && audioContext.state === 'suspended') {
+        audioContext.resume();
+        console.log("--- 1. AUDIO DEBUG: Audio Context resumed ---");
+    }
+
+    if (mouseClickToggle) {
+        // --- 模拟：进入天空区域 (rotx = 90) ---
+
+        // 逻辑判断：isPointingToSky = true && !isInSkyPosition
+        if (!isInSkyPosition) {
+            isInSkyPosition = true;
+            console.log(`--- 2. INTERACTION DEBUG: Entering Sky Position (isInSkyPosition: ${isInSkyPosition}) ---`);
+
+            if (!isEngineRunning) {
+                // 启动引擎
+                isEngineRunning = true;
+                if (dspNode) {
+                    // ACTION: Gate=1, MaxSpeed=0.1
+                    dspNode.setParamValue("/engine/gate", 1);
+                    dspNode.setParamValue("/engine/maxSpeed", maxSpeedValue);
+                    console.log(`--- 3a. ACTION: Engine Started! Initial Max Speed: ${maxSpeedValue} ---`);
+                } else {
+                    console.log("--- DSP NODE NOT READY ---");
+                }
+            } else {
+                // 加速
+                if (maxSpeedValue < MAX_SPEED_LIMIT) {
+                    maxSpeedValue = Math.min(maxSpeedValue + 0.05, MAX_SPEED_LIMIT);
+                    if (dspNode) {
+                        // ACTION: MaxSpeed 增加
+                        dspNode.setParamValue("/engine/maxSpeed", maxSpeedValue);
+                        const currentDspMaxSpeed = dspNode.getParamValue("/engine/maxSpeed");
+                        console.log(`--- 3b. ACTION: Max Speed Increased! DSP Value: ${currentDspMaxSpeed.toFixed(2)} (Target: ${maxSpeedValue.toFixed(2)}) ---`);
+                    }
+                } else {
+                    console.log("--- 3c. ACTION: Max Speed is already at the limit: " + MAX_SPEED_LIMIT + " ---");
+                }
+            }
+        } else {
+            console.log("--- 2. INTERACTION DEBUG: Already in Sky Position, no trigger ---");
+        }
+
+    } else {
+        // --- 模拟：离开天空区域 (rotx != 90) ---
+
+        // 逻辑判断：!isPointingToSky && isInSkyPosition
+        if (isInSkyPosition) {
+            // 手机离开了天空区域 -> 复位
+            isInSkyPosition = false;
+            console.log(`--- 4. RESET DEBUG: Left Sky Position (isInSkyPosition: ${isInSkyPosition}). Ready for next boost. ---`);
+        } else {
+            console.log("--- 4. RESET DEBUG: Already out of Sky Position. ---");
+        }
+    }
+
+    // 切换状态，让下次点击执行不同的逻辑
+    mouseClickToggle = !mouseClickToggle;
+    console.log(`--- 5. TOGGLE: Next click will simulate ${mouseClickToggle ? 'ENTERING' : 'LEAVING'} Sky Position. ---`);
+}
+*/
 function deviceMoved() {
     //movetimer = millis();
     //statusLabels[2].style("color", "pink");
@@ -133,9 +192,6 @@ function getMinMaxParam(address) {
 //------------------------------------------------------------------------------------------
 //
 //==========================================================================================
-
-// playAudio 函数不再需要，因为 rotationChange 直接控制了引擎的启动和速度。
-
 
 //==========================================================================================
 // END
