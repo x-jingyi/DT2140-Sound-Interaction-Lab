@@ -101,7 +101,7 @@ function deviceTurned() {
         }
 
         // map speed to force
-        const maxExpectedSpeed = 360;
+        const maxExpectedSpeed = 270;
         let force = map(rotationSpeed, 0, maxExpectedSpeed, 0, MAX_FORCE);
         force = constrain(force, 0, MAX_FORCE);
 
