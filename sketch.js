@@ -70,15 +70,15 @@ function setup() {
   let statBox = createDiv();
   statBox.id("status");
 
-  statusLabels[0] = createP(stateLabels[0] );
+  statusLabels[0] = createP(stateLabels[0]);
   statusLabels[0].parent(statBox.elt);
   statusLabels[0].id("shaken");
 
-  statusLabels[1] = createP(stateLabels[1] );
+  statusLabels[1] = createP(stateLabels[1]);
   statusLabels[1].parent(statBox.elt);
   statusLabels[1].id("turned");
 
-  statusLabels[2] = createP(stateLabels[2] );
+  statusLabels[2] = createP(stateLabels[2]);
   statusLabels[2].parent(statBox.elt);
   statusLabels[2].id("moved");
 
@@ -104,7 +104,7 @@ function setup() {
   sliders[3].parent(dSlider2.elt);
 
   sliders[2] = createSlider(0, 75, 50, 1); //move thresh, 0 - 75, default = 50, step = 1
-///  sliders[2].size(sliderWidth);
+  ///  sliders[2].size(sliderWidth);
   sliders[2].parent(dSlider2.elt);
   sliders[2].style('position', 'unset');
 
@@ -113,7 +113,7 @@ function setup() {
   //init buttons
   buttonWidth = width / 4;
   buttons[0] = createButton(buttonLabels[0]); //shaker thresh, 0 - 100, default = 30, step = 1
- 
+
   buttons[0].id(buttonIDs[0]);
   buttons[0].parent(buttonBox.elt);
   buttons[0].mousePressed(contextAudioStart);
@@ -144,16 +144,16 @@ function draw() {
   setShakeThreshold(threshVals[0]);
   setMoveThreshold(threshVals[2]);
 
-  if (millis() - shaketimer > 1000) { 
+  if (millis() - shaketimer > 1000) {
     statusLabels[0].style("color", "black");
   }
-  if (millis() - turntimer > 1000) { 
+  if (millis() - turntimer > 1000) {
     statusLabels[1].style("color", "black");
   }
   if (millis() - movetimer > 1000) {
     statusLabels[2].style("color", "black");
   }
-  
+
 }
 
 //==========================================================================================
