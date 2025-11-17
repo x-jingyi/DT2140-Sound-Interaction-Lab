@@ -1,15 +1,21 @@
 //==========================================================================================
 // AUDIO SETUP
+//------------------------------------------------------------------------------------------
+//
+//------------------------------------------------------------------------------------------
+// Edit just where you're asked to!
+//------------------------------------------------------------------------------------------
+//
 //==========================================================================================
 let dspNode = null;
 let dspNodeParams = null;
 let jsonParams = null;
 
-// wasm 文件名
-const dspName = "windchimes";
+// Change here to ("tuono") depending on your wasm file name
+const dspName = "bells";
 const instance = new FaustWasm2ScriptProcessor(dspName);
 
-// 输出实例
+// output to window or npm package module
 if (typeof module === "undefined") {
     window[dspName] = instance;
 } else {
@@ -18,86 +24,88 @@ if (typeof module === "undefined") {
     module.exports = exp;
 }
 
-// 创建 DSP
-windchimes.createDSP(audioContext, 1024)
+// The name should be the same as the WASM file, so change tuono with brass if you use brass.wasm
+bells.createDSP(audioContext, 1024)
     .then(node => {
         dspNode = node;
         dspNode.connect(audioContext.destination);
-
-        console.log('DSP Params: ', dspNode.getParams());
+        console.log('params: ', dspNode.getParams());
         const jsonString = dspNode.getJSON();
         jsonParams = JSON.parse(jsonString)["ui"][0]["items"];
-        dspNodeParams = jsonParams;
+        dspNodeParams = jsonParams
+        // const exampleMinMaxParam = findByAddress(dspNodeParams, "/thunder/rumble");
+        // // ALWAYS PAY ATTENTION TO MIN AND MAX, ELSE YOU MAY GET REALLY HIGH VOLUMES FROM YOUR SPEAKERS
+        // const [exampleMinValue, exampleMaxValue] = getParamMinMax(exampleMinMaxParam);
+        // console.log('Min value:', exampleMinValue, 'Max value:', exampleMaxValue);
     });
+
 
 //==========================================================================================
 // INTERACTIONS
+//------------------------------------------------------------------------------------------
+//
+//------------------------------------------------------------------------------------------
+// Edit the next functions to create interactions
+// Decide which parameters you're using and then use playAudio to play the Audio
+//------------------------------------------------------------------------------------------
+//
 //==========================================================================================
 
-// 全局存储加速度
-let accX = 0, accY = 0, accZ = 0;
-
-function draw() {
-    // p5.js 自动更新加速度
-    accX = accelerationX;
-    accY = accelerationY;
-    accZ = accelerationZ;
-
-    // 【假设修正】：如果你的 sketch.js 第 132 行在这里（或其他地方）
-    // 引用了未定义的 accelerationChange，请将其移除或注释。
-    // 假设你只需要上面三行，则无需修改。
+function accelerationChange(accx, accy, accz) {
+    // playAudio()
 }
 
-// 设备摇动事件
-function deviceShaken() {
-    shaketimer = millis();
-    // 变色提示
-    statusLabels[0].style("color", "pink");
-
-    if (!dspNode) return;
-
-    // 计算摇动强度
-    let strength = Math.sqrt(accX * accX + accY * accY + accZ * accZ);
-    strength = constrain(strength, 0, 30); // 限制最大值
-
-    // 将强度映射到 wind 参数 (假设 wind 参数范围 0~1)
-    let windValue = map(strength, 0, 30, 0, 2);
-
-    // 【关键修复】：根据控制台输出，参数地址应为 /windchimes/wind_chimes/wind
-    dspNode.setParamValue("/windchimes/wind_chimes/wind", windValue);
-
-    // 【建议添加】：如果风铃没有声音，可能需要一个瞬时触发器（Gate/Trigger）
-    // 你可以尝试查看 DSP Params 中是否有类似 /windchimes/gate 或 /windchimes/trigger 的参数
-    // 如果有，你可以尝试添加如下代码（但请先尝试上面的修复）：
-    /*
-    dspNode.setParamValue("/windchimes/gate", 1);
-    setTimeout(() => {
-        dspNode.setParamValue("/windchimes/gate", 0);
-    }, 100);
-    */
-
-    // 控制台打印便于调试
-    console.log("strength:", strength.toFixed(2), "windValue:", windValue.toFixed(2));
+function rotationChange(rotx, roty, rotz) {
 }
 
-// 设备移动事件（可选）
+function mousePressed() {
+    // playAudio()
+    // Use this for debugging from the desktop!
+}
+
 function deviceMoved() {
     movetimer = millis();
     statusLabels[2].style("color", "pink");
 }
 
-// 设备旋转事件（可选）
 function deviceTurned() {
     threshVals[1] = turnAxis;
 }
-
-//==========================================================================================
-// UTILS
-//==========================================================================================
+function deviceShaken() {
+    shaketimer = millis();
+    statusLabels[0].style("color", "pink");
+    playAudio();
+}
 
 function getMinMaxParam(address) {
     const exampleMinMaxParam = findByAddress(dspNodeParams, address);
+    // ALWAYS PAY ATTENTION TO MIN AND MAX, ELSE YOU MAY GET REALLY HIGH VOLUMES FROM YOUR SPEAKERS
     const [exampleMinValue, exampleMaxValue] = getParamMinMax(exampleMinMaxParam);
     console.log('Min value:', exampleMinValue, 'Max value:', exampleMaxValue);
-    return [exampleMinValue, exampleMaxValue];
+    return [exampleMinValue, exampleMaxValue]
 }
+
+//==========================================================================================
+// AUDIO INTERACTION
+//------------------------------------------------------------------------------------------
+//
+//------------------------------------------------------------------------------------------
+// Edit here to define your audio controls 
+//------------------------------------------------------------------------------------------
+//
+//==========================================================================================
+
+function playAudio() {
+    if (!dspNode) {
+        return;
+    }
+    if (audioContext.state === 'suspended') {
+        return;
+    }
+    dspNode.setParamValue("/englishBell/gate", 1)
+    setTimeout(() => { dspNode.setParamValue("/englishBell/gate", 0) }, 100);
+}
+
+//==========================================================================================
+// END
+//==========================================================================================
