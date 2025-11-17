@@ -1,54 +1,98 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta
-      http-equiv="Cache-Control"
-      content="no-cache, max-age=0, must-revalidate"
-    />
-    <title>p5.js faust example</title>
-    <link rel="stylesheet" href="styles.css" /> 
-    <script src="https://cdn.jsdelivr.net/npm/p5@1.9.0/lib/p5.js"></script>
-    <script src="dsp.js"></script>
-  </head>
 
-  <body class="grid-container fullbody">
-    <nav class="primary-nav">
-      <li><a href="index.html">Interaction 1</a></li>
-      <li><a href="sound2.html">Interaction 2</a></li>
-      <li><a href="sound3.html">Interaction 3</a></li>
-    </nav>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Cache-Control" content="no-cache, max-age=0, must-revalidate" />
+  <title>p5.js faust example</title>
 
-    <div id="info">
-      <p>
-        <b>Insert a description of your sonic interaction design here! </b>
-        <br />
-        <br />
-        Lorem ipsum dolor sit amet consectetur adipisicing elit. Aut adipisci,
-        non quasi vel vero odit debitis recusandae impedit laborum id tempora!
-        Enim accusantium a voluptatum nisi ea placeat? Accusamus, perferendis?
-        Lorem ipsum dolor sit amet consectetur adipisicing elit. Consequuntur
-        accusantium suscipit eaque similique odit deserunt iure est unde libero
-        pariatur doloribus voluptatibus voluptatum cupiditate error, dolorem
-        eius eos. Provident, ullam.
-      </p>
-    </div>
+  <link rel="stylesheet" href="styles.css" />
 
-    <footer>
-      <p>
-        Developed by Maurizio Berta and Laura McHugh
-        <br />
-        for
-        <a href="https://github.com/mauriziobrt/DT2140-Sound-Interaction-Lab"
-          >DT2140 Multimodal Interfaces Sound Interaction Lab</a
-        >
-        <br />
-        KTH Royal Institute of Technology, 2025
-      </p>
-    </footer>
-  </body>
+  <!-- p5.js -->
+  <script src="https://cdn.jsdelivr.net/npm/p5@1.9.0/lib/p5.js"></script>
+
+  <!-- faust dsp loader -->
+  <script src="dsp.js"></script>
+
+  <style>
+    /* 让 status labels 可见（你原来没有这部分） */
+    #statusBox {
+      margin: 20px;
+      font-size: 20px;
+    }
+
+    .statusLabel {
+      display: block;
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+
+<!-- 必须加 onclick，否则 motion + audioContext 不会被允许 -->
+
+<body class="grid-container fullbody" onclick="enableAudioAndSensors()">
+
+  <nav class="primary-nav">
+    <li><a href="index.html">Interaction 1</a></li>
+    <li><a href="sound2.html">Interaction 2</a></li>
+    <li><a href="sound3.html">Interaction 3</a></li>
+  </nav>
+
+  <div id="info">
+    <p><b>Shake your phone to play windchimes 🌬🔔</b></p>
+  </div>
+
+  <!-- Status for debugging (needed for your JS code) -->
+  <div id="statusBox">
+    <span id="shakeStatus" class="statusLabel">Shake: inactive</span>
+    <span id="moveStatus" class="statusLabel">Move: inactive</span>
+    <span id="turnStatus" class="statusLabel">Turn: inactive</span>
+  </div>
+
+  <footer>
+    <p>
+      Developed by Maurizio Berta and Laura McHugh<br />
+      for
+      <a href="https://github.com/mauriziobrt/DT2140-Sound-Interaction-Lab">
+        DT2140 Multimodal Interfaces Sound Interaction Lab
+      </a>
+      <br />KTH Royal Institute of Technology, 2025
+    </p>
+  </footer>
+
+  <script>
+    /* ========================================================
+       ENABLE AUDIO + MOTION SENSOR PERMISSION
+    ======================================================== */
+    function enableAudioAndSensors() {
+      // resume audio
+      if (typeof audioContext !== "undefined") {
+        audioContext.resume();
+      }
+
+      // motion sensor permission (iOS & Chrome)
+      if (
+        typeof DeviceMotionEvent !== "undefined" &&
+        typeof DeviceMotionEvent.requestPermission === "function"
+      ) {
+        DeviceMotionEvent.requestPermission()
+          .then((response) => {
+            if (response !== "granted") {
+              alert("Please allow motion sensor access.");
+            }
+          })
+          .catch(console.error);
+      }
+
+      console.log("Audio + Motion enabled");
+    }
+  </script>
+
+  <!-- Your helper scripts -->
   <script src="helpers.js"></script>
   <script src="interaction-1.js"></script>
   <script src="sketch.js"></script>
+</body>
+
 </html>
