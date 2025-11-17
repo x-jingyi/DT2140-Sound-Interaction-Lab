@@ -59,33 +59,32 @@ function accelerationChange(accx, accy, accz) {
 }
 
 function rotationChange(rotx, roty, rotz) {
-    function rotationChange(rotx, roty, rotz) {
-        const angleThreshold = 5; // 设置一个容错范围，例如 85度 到 95度 之间都算“指向天空”
+    const angleThreshold = 5; // 设置一个容错范围，例如 85度 到 95度 之间都算“指向天空”
 
-        // 检查 rotx 是否接近 90 度 (指向天空)
-        if (Math.abs(rotx - 90) <= angleThreshold) {
+    // 检查 rotx 是否接近 90 度 (指向天空)
+    if (Math.abs(rotx - 90) <= angleThreshold) {
 
-            if (!isEngineRunning) {
-                // 第一次指向天空：启动引擎
-                isEngineRunning = true;
-                dspNode.setParamValue("/engine/gate", 1);
-                console.log("Engine Started! Initial Max Speed: " + maxSpeedValue);
+        if (!isEngineRunning) {
+            // 第一次指向天空：启动引擎
+            isEngineRunning = true;
+            dspNode.setParamValue("/engine/gate", 1);
+            console.log("Engine Started! Initial Max Speed: " + maxSpeedValue);
+        } else {
+            // 后续指向天空：增加 maxSpeedValue
+            if (maxSpeedValue < MAX_SPEED_LIMIT) {
+                maxSpeedValue += 0.05; // 每次增加 0.05
+                // 确保不超过最大值
+                maxSpeedValue = Math.min(maxSpeedValue, MAX_SPEED_LIMIT);
+
+                // 将新的 maxSpeedValue 应用到 DSP
+                dspNode.setParamValue("/engine/maxSpeed", maxSpeedValue);
+                console.log("Max Speed Increased to: " + maxSpeedValue);
             } else {
-                // 后续指向天空：增加 maxSpeedValue
-                if (maxSpeedValue < MAX_SPEED_LIMIT) {
-                    maxSpeedValue += 0.05; // 每次增加 0.05
-                    // 确保不超过最大值
-                    maxSpeedValue = Math.min(maxSpeedValue, MAX_SPEED_LIMIT);
-
-                    // 将新的 maxSpeedValue 应用到 DSP
-                    dspNode.setParamValue("/engine/maxSpeed", maxSpeedValue);
-                    console.log("Max Speed Increased to: " + maxSpeedValue);
-                } else {
-                    console.log("Max Speed is already at the limit: " + MAX_SPEED_LIMIT);
-                }
+                console.log("Max Speed is already at the limit: " + MAX_SPEED_LIMIT);
             }
         }
     }
+
 }
 
 function mousePressed() {
